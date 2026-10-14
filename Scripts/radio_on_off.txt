@@ -1,0 +1,7 @@
+Radio ON OFF test
+INFO:root:Creating SSH_session ip: 10.110.153.12, username: admin, operating system: access_point
+INFO:paramiko.transport:Connected (version 2.0, client dropbear_2020.81)
+INFO:paramiko.transport:Authentication (password) successful!
+INFO:root:Creating SSH_session ip: 10.110.153.12, username: admin, operating system: access_point
+INFO:paramiko.transport:Connected (version 2.0, client dropbear_2020.81)
+INFO:paramiko.transport:Authentication (password) successful!

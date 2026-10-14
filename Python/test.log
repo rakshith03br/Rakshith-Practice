@@ -1,0 +1,20 @@
+DEBUG:root:Add 10 + 5 is: 15
+DEBUG:root:sub 10 - 5 is: 5
+DEBUG:root:mul 10 * 5 is: 50
+DEBUG:root:div 10 / 5 is: 2.0
+DEBUG:root:Add 30 + 5 is: 35
+DEBUG:root:sub 30 - 5 is: 25
+DEBUG:root:mul 30 * 5 is: 150
+DEBUG:root:div 30 / 5 is: 6.0
+&(asctime)s:DEBUG:Add 30 + 5 is: 35
+&(asctime)s:DEBUG:sub 30 - 5 is: 25
+&(asctime)s:DEBUG:mul 30 * 5 is: 150
+&(asctime)s:DEBUG:div 30 / 5 is: 6.0
+&(asctime)s:DEBUG:Add 30 + 5 is: 35
+&(asctime)s:DEBUG:sub 30 - 5 is: 25
+&(asctime)s:DEBUG:mul 30 * 5 is: 150
+&(asctime)s:DEBUG:div 30 / 5 is: 6.0
+2023-04-12 17:15:30,472:DEBUG:Add 30 + 5 is: 35
+2023-04-12 17:15:30,473:DEBUG:sub 30 - 5 is: 25
+2023-04-12 17:15:30,473:DEBUG:mul 30 * 5 is: 150
+2023-04-12 17:15:30,473:DEBUG:div 30 / 5 is: 6.0

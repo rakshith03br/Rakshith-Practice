@@ -1,0 +1,1 @@
+request.node.originalname :- to get test case name in pytest

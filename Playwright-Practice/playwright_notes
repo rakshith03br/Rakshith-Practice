@@ -1,0 +1,16 @@
+Playwright: It will support Web and API automation
+--------------------------------------------------------------------------
+Python: Programing language
+Pytest: testing framework developed using Python
+--------------------------------------------------------------------------
+Playwright is available as a plugin on top of pytest
+
+Install playwright pytest:
+    # pip install pytest-playwright
+Install playwright browsers:
+    # playwright install
+
+
+
+
+

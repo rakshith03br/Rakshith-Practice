@@ -1,0 +1,385 @@
+================================================================================
+                         GIT & GITHUB - COMPLETE NOTES
+================================================================================
+
+1. BASIC CONCEPTS
+--------------------------------------------------------------------------------
+
+GIT:
+    - Git is a distributed Version Control System (VCS).
+    - It tracks changes in your code on your LOCAL machine.
+    - Local Directory = the folder on your computer where you write code.
+
+GITHUB / BITBUCKET:
+    - These are REMOTE hosting platforms for Git repositories.
+    - They allow teams to store, share, and collaborate on code online.
+    - Local Directory  --> pushed to -->  Remote Repository (GitHub/Bitbucket)
+
+WORKFLOW (Local Git Flow):
+
+    Local Directory  --->  Staging Area  --->  Local Repository  --->  Remote Repository
+     (working dir)          (git add)           (git commit)            (git push)
+
+
+================================================================================
+2. GIT COMMANDS WITH EXAMPLES
+================================================================================
+
+--------------------------------------------------------------------------------
+2.1 CLONE A REPOSITORY
+--------------------------------------------------------------------------------
+Command:
+    git clone <repository_url> <directory_name>
+
+Example:
+    git clone https://github.com/user/my-project.git my-project
+    (Downloads the remote repo into a folder named "my-project")
+
+
+--------------------------------------------------------------------------------
+2.2 CHECK STATUS
+--------------------------------------------------------------------------------
+Command:
+    git status
+
+Example:
+    git status
+    -> Shows which files are modified, staged, or untracked.
+
+
+--------------------------------------------------------------------------------
+2.3 CHECK / VIEW BRANCH
+--------------------------------------------------------------------------------
+Command:
+    git branch
+
+Example:
+    git branch
+    -> Lists all local branches and highlights the current branch with a "*".
+
+
+--------------------------------------------------------------------------------
+2.4 STAGING FILES (git add)
+--------------------------------------------------------------------------------
+Used to move changes from the Working Directory to the Staging Area
+before committing.
+
+    git add --all         -> Stage every change (new, modified, deleted) in the project
+    git add -A            -> Same as --all, stages everything in the project
+    git add .             -> Stage changes only in the current directory (and subfolders)
+    git add *             -> Stage new/modified files, but NOT deleted files
+    git add <file_name>   -> Stage a specific file
+    git add *.txt         -> Stage all files with the ".txt" extension
+
+Examples:
+    git add index.html          -> Stages only index.html
+    git add *.js                -> Stages all JavaScript files
+    git add .                   -> Stages everything changed in current folder
+
+
+--------------------------------------------------------------------------------
+2.5 UNDOING CHANGES (git reset)
+--------------------------------------------------------------------------------
+    git reset             -> Undo "git add" — moves staged files back to working directory
+    git reset HEAD~        -> Undo the last commit, changes go back to working directory
+    git reset --hard       -> Discards changes and restores the last committed state
+                              (can also bring back recently deleted files)
+
+Examples:
+    git reset app.py            -> Unstage app.py (keeps changes in working directory)
+    git reset HEAD~1            -> Undo last commit but keep the changes
+    git reset --hard HEAD~1     -> Undo last commit AND discard the changes completely
+
+
+--------------------------------------------------------------------------------
+2.6 COMMITTING CHANGES
+--------------------------------------------------------------------------------
+Command:
+    git commit -m "commit message"
+
+Example:
+    git commit -m "Added login functionality"
+
+CONFIGURING USER INFO (needed before committing):
+
+    Global config (applies to ALL repositories on your machine):
+        git config --global user.email "your@gmail.com"
+        git config --global user.name "git username"
+
+    Local config (applies only to the CURRENT repository):
+        git config --local user.email "your@gmail.com"
+        git config --local user.name "git username"
+
+Example:
+    git config --global user.email "john@gmail.com"
+    git config --global user.name "John Doe"
+
+
+--------------------------------------------------------------------------------
+2.7 REMOVING FILES (git rm)
+--------------------------------------------------------------------------------
+    git rm <file_name>          -> Deletes the file AND stages the deletion
+    git rm -f <file_name>       -> Force delete the file completely
+    git rm --cached <file_name> -> Removes file only from staging (keeps it on disk)
+    git rm -r <folder_name>     -> Deletes a folder and its contents (recursively), no staging needed
+
+Examples:
+    git rm old_file.txt             -> Deletes old_file.txt and stages the removal
+    git rm --cached secrets.env     -> Stops tracking secrets.env but keeps it locally
+    git rm -r old_folder/           -> Deletes entire folder
+
+
+--------------------------------------------------------------------------------
+2.8 VIEWING COMMIT HISTORY (git log)
+--------------------------------------------------------------------------------
+    git log             -> Lists all commits with full details (author, date, message, hash)
+    git log --oneline   -> Lists commits in a compact, single-line-per-commit format
+
+Example:
+    git log --oneline
+    Output:
+        a1b2c3d Added login functionality
+        e4f5g6h Fixed navbar bug
+        i7j8k9l Initial commit
+
+
+--------------------------------------------------------------------------------
+2.9 BRANCHING
+--------------------------------------------------------------------------------
+    git branch                    -> List all branches
+    git branch <new_branch_name>  -> Create a new branch
+    git checkout <branch_name>    -> Switch to that branch
+
+Examples:
+    git branch feature-login         -> Creates a branch named "feature-login"
+    git checkout feature-login       -> Switches to the "feature-login" branch
+
+    (Shortcut to create + switch in one command)
+    git checkout -b feature-login
+
+
+--------------------------------------------------------------------------------
+2.10 MERGING BRANCHES
+--------------------------------------------------------------------------------
+While on the "dev" branch, to bring "main" branch changes into "dev":
+    git checkout dev
+    git merge main -m "merging main branch to dev"
+
+While on the "main" branch, to bring "dev" branch changes into "main":
+    git checkout main
+    git merge dev_branch -m "merge dev to main"
+
+Example:
+    git checkout main
+    git merge dev -m "merge dev to main"
+    -> Combines the "dev" branch history into "main"
+
+
+--------------------------------------------------------------------------------
+2.11 CHECKOUT A SPECIFIC COMMIT
+--------------------------------------------------------------------------------
+Command:
+    git checkout <commit_id>
+
+Example:
+    git checkout a1b2c3d
+    -> Moves your working directory to the state of that specific commit
+       (this puts you in a "detached HEAD" state)
+
+
+--------------------------------------------------------------------------------
+2.12 COMPARING COMMITS (git diff)
+--------------------------------------------------------------------------------
+Command:
+    git diff <commit_id_1> <commit_id_2>
+
+Example:
+    git diff a1b2c3d e4f5g6h
+    -> Shows line-by-line differences between the two commits
+
+
+--------------------------------------------------------------------------------
+2.13 PUSHING TO REMOTE
+--------------------------------------------------------------------------------
+    git push                 -> Sends local committed changes to the remote repository
+    git push origin main     -> Pushes local "main" branch to the "origin" remote
+
+Example:
+    git push origin main
+    -> Uploads your local commits on "main" to GitHub/Bitbucket
+
+
+--------------------------------------------------------------------------------
+2.14 FETCHING FROM REMOTE
+--------------------------------------------------------------------------------
+Command:
+    git fetch
+
+Example:
+    git fetch origin
+    -> Downloads new commits/branches from remote WITHOUT merging them into
+       your working files. You review changes before merging.
+
+
+--------------------------------------------------------------------------------
+2.15 PULLING FROM REMOTE
+--------------------------------------------------------------------------------
+Command:
+    git pull
+
+Note:
+    git pull = git fetch + git merge
+    (fetches remote changes AND immediately merges them into your current branch)
+
+Example:
+    git pull origin main
+    -> Updates your local "main" branch with the latest changes from remote
+
+
+--------------------------------------------------------------------------------
+2.16 RESTORING FILES
+--------------------------------------------------------------------------------
+    git restore <file_name>        -> Restores file to its last committed state
+    git restore --staged <file>    -> Unstages a file (keeps changes in working dir)
+    git restore --staged .         -> Unstages all files
+
+Examples:
+    git restore app.py                  -> Discards uncommitted changes in app.py
+    git restore --staged app.py         -> Removes app.py from staging area
+    git restore --staged .              -> Unstages everything
+
+
+--------------------------------------------------------------------------------
+2.17 STASHING CHANGES
+--------------------------------------------------------------------------------
+Stashing temporarily saves uncommitted changes so you can switch branches cleanly.
+
+    git stash                 -> Save current uncommitted changes to a stash
+    git stash pop              -> Restore latest stashed changes AND remove it from stash list
+    git stash apply             -> Restore latest stashed changes but KEEP it in stash list
+    git stash list             -> Show list of all stashes
+    git stash pop stash@{0}    -> Restore & remove a specific stash by index
+    git stash apply stash@{0}  -> Restore a specific stash but keep it in the list
+    git stash drop              -> Delete a stash entry from the list
+
+Example workflow:
+    git stash                       -> Save your current changes
+    git checkout other-branch       -> Switch branches safely
+    git checkout original-branch    -> Come back
+    git stash pop                   -> Restore your saved changes
+
+
+--------------------------------------------------------------------------------
+2.18 REVERTING A COMMIT
+--------------------------------------------------------------------------------
+Command:
+    git revert <commit_id>
+
+Example:
+    git revert a1b2c3d
+    -> Creates a NEW commit that undoes the changes made by commit "a1b2c3d"
+       (safe way to undo, since it doesn't rewrite history)
+
+
+--------------------------------------------------------------------------------
+2.19 REBASING
+--------------------------------------------------------------------------------
+Command:
+    git rebase <branch_name>
+
+Example:
+    git checkout feature-branch
+    git rebase main
+    -> Moves/replays "feature-branch" commits on top of the latest "main" branch,
+       creating a cleaner, linear commit history
+
+
+--------------------------------------------------------------------------------
+2.20 DELETING A BRANCH
+--------------------------------------------------------------------------------
+Delete a LOCAL branch:
+    git branch -d <branch_name>     -> Safe delete (only if branch is already merged)
+    git branch -D <branch_name>     -> Force delete (removes even if unmerged) [-D = capital]
+
+Delete a REMOTE branch:
+    git push origin --delete <branch_name>
+
+Examples:
+    git branch -d feature-login                  -> Deletes local branch "feature-login" (safe)
+    git branch -D feature-login                  -> Force deletes local branch "feature-login"
+    git push origin --delete feature-login       -> Deletes "feature-login" from remote (GitHub)
+
+
+--------------------------------------------------------------------------------
+2.21 INITIALIZING A NEW LOCAL REPO & CONNECTING TO A REMOTE (FROM SCRATCH)
+--------------------------------------------------------------------------------
+Use this workflow when you're starting a brand-new project locally and want to
+turn it into a Git repo, then link it to an empty remote repo you created on
+GitHub/Bitbucket.
+
+    git init                       -> Initializes a new, empty local Git repository
+                                       (creates a hidden ".git" folder in current directory)
+    git status                     -> Check current status (shows untracked files)
+    git remote add origin <url>    -> Links your local repo to a remote repo, naming it "origin"
+    git branch                     -> List branches (confirms which branch you're on)
+    git add .                      -> Stage all files in the current directory
+    git commit -m "message"        -> Commit the staged files with a message
+    git push origin master         -> Push your local "master" branch to the "origin" remote
+
+Example (step-by-step):
+    git init
+    git status
+    git remote add origin <url>
+    git branch
+    git add .
+    git commit -m "Add practice repo"
+    git push origin master
+
+Notes:
+    - <url> is the remote repository's URL, e.g.
+      https://github.com/username/repo-name.git
+    - "origin" is just the conventional name for the remote; you could name it
+      anything, but "origin" is the standard.
+    - Newer versions of Git may default the initial branch to "main" instead of
+      "master" — check with "git branch" before pushing, and push to whichever
+      branch name actually exists locally (e.g. "git push origin main").
+    - If the remote already has commits (e.g. a README created on GitHub), the
+      push may be rejected. In that case, either pull first
+      ("git pull origin master --allow-unrelated-histories") or push with
+      "-u" to set upstream tracking: "git push -u origin master".
+    - To check which remotes are already configured: "git remote -v"
+    - To remove a remote: "git remote remove origin"
+
+
+================================================================================
+3. QUICK REFERENCE CHEAT SHEET
+================================================================================
+
+    git init                              Initialize a new local repo
+    git remote add origin <url>           Connect local repo to a remote
+    git remote -v                         View configured remotes
+    git clone <url> <dir>                 Clone a repository
+    git status                            Check current status
+    git branch                            List branches
+    git add <file>                        Stage a file
+    git commit -m "msg"                   Commit staged changes
+    git push origin <branch>              Push to remote
+    git pull                              Fetch + merge from remote
+    git fetch                             Download remote changes only
+    git checkout <branch>                 Switch branch
+    git checkout -b <branch>              Create + switch branch
+    git merge <branch>                    Merge a branch into current one
+    git log --oneline                     View compact commit history
+    git diff <c1> <c2>                    Compare two commits
+    git reset HEAD~                       Undo last commit (keep changes)
+    git reset --hard                      Undo & discard changes completely
+    git restore <file>                    Discard uncommitted changes
+    git restore --staged <file>           Unstage a file
+    git stash / git stash pop             Save & restore temp changes
+    git revert <commit_id>                Safely undo a commit (new commit)
+    git rebase <branch>                   Reapply commits on top of another branch
+    git branch -d <branch>                Delete local branch (safe)
+    git branch -D <branch>                Force delete local branch
+    git push origin --delete <branch>     Delete remote branch
+
+================================================================================

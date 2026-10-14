@@ -1,0 +1,420 @@
+==================================================================
+JENKINS GROOVY (JENKINS FILE) SYNTAX REFERENCE
+==================================================================
+
+There are two pipeline styles in Jenkins:
+  1. DECLARATIVE PIPELINE - structured, opinionated, easier to read
+  2. SCRIPTED PIPELINE    - plain Groovy, more flexible/powerful
+
+------------------------------------------------------------------
+1. DECLARATIVE PIPELINE - FULL SKELETON
+------------------------------------------------------------------
+
+pipeline {
+    agent any   // or: agent { label 'linux' }
+                // or: agent { docker { image 'node:18' } }
+                // or: agent none  (define per-stage agents instead)
+
+    environment {
+        APP_ENV = 'production'
+        CREDS   = credentials('my-cred-id')
+    }
+
+    parameters {
+        string(name: 'BRANCH', defaultValue: 'main', description: 'Branch to build')
+        booleanParam(name: 'DEPLOY', defaultValue: false, description: 'Deploy after build?')
+        choice(name: 'ENV', choices: ['dev', 'staging', 'prod'], description: 'Target env')
+        text(name: 'NOTES', defaultValue: '', description: 'Free text notes')
+        password(name: 'SECRET', defaultValue: '', description: 'Sensitive value')
+    }
+
+    options {
+        timeout(time: 30, unit: 'MINUTES')
+        retry(2)
+        timestamps()
+        disableConcurrentBuilds()
+        buildDiscarder(logRotator(numToKeepStr: '10'))
+        ansiColor('xterm')
+    }
+
+    triggers {
+        cron('H 2 * * *')       // scheduled build (H spreads load)
+        pollSCM('H/5 * * * *')  // poll SCM every ~5 min
+        upstream(upstreamProjects: 'other-job', threshold: hudson.model.Result.SUCCESS)
+    }
+
+    tools {
+        maven 'Maven-3.9'
+        jdk 'JDK-17'
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Build') {
+            steps {
+                sh 'mvn clean package'
+            }
+        }
+
+        stage('Test') {
+            steps {
+                sh 'mvn test'
+            }
+            post {
+                always {
+                    junit 'target/surefire-reports/*.xml'
+                }
+            }
+        }
+
+        stage('Deploy') {
+            when {
+                expression { params.DEPLOY == true }
+            }
+            steps {
+                echo "Deploying to ${params.ENV}"
+            }
+        }
+    }
+
+    post {
+        success {
+            echo 'Build succeeded!'
+        }
+        failure {
+            mail to: 'team@example.com', subject: 'Build Failed', body: 'Check Jenkins'
+        }
+        unstable {
+            echo 'Build unstable'
+        }
+        changed {
+            echo 'Result changed from previous run'
+        }
+        always {
+            cleanWs()
+        }
+    }
+}
+
+------------------------------------------------------------------
+2. SCRIPTED PIPELINE - FULL SKELETON
+------------------------------------------------------------------
+
+node('linux') {
+    try {
+        stage('Checkout') {
+            checkout scm
+        }
+
+        stage('Build') {
+            sh 'mvn clean package'
+        }
+
+        stage('Test') {
+            sh 'mvn test'
+        }
+
+        if (env.BRANCH_NAME == 'main') {
+            stage('Deploy') {
+                sh './deploy.sh'
+            }
+        }
+    } catch (Exception e) {
+        currentBuild.result = 'FAILURE'
+        throw e
+    } finally {
+        cleanWs()
+    }
+}
+
+------------------------------------------------------------------
+3. VARIABLES & ENVIRONMENT
+------------------------------------------------------------------
+
+def myVar = "hello"
+echo "${myVar} world"
+echo "Build number: ${env.BUILD_NUMBER}"
+echo "Job name: ${env.JOB_NAME}"
+echo "Workspace: ${env.WORKSPACE}"
+echo "Git branch: ${env.BRANCH_NAME}"
+echo "Build URL: ${env.BUILD_URL}"
+
+Set an env var dynamically inside a script block:
+    script {
+        env.MY_VAR = "some-value"
+    }
+
+------------------------------------------------------------------
+4. CONDITIONALS (when block - Declarative)
+------------------------------------------------------------------
+
+when {
+    branch 'main'
+}
+
+when {
+    allOf {
+        branch 'main'
+        environment name: 'DEPLOY', value: 'true'
+    }
+}
+
+when {
+    anyOf {
+        branch 'main'
+        branch 'release/*'
+    }
+}
+
+when {
+    not { branch 'main' }
+}
+
+when {
+    expression { return params.DEPLOY == true }
+}
+
+when {
+    changelog '.*BUILD.*'
+}
+
+when {
+    changeset "**/*.java"
+}
+
+Groovy-style if/else (inside script {} blocks):
+    script {
+        if (env.BRANCH_NAME == 'main') {
+            echo 'On main branch'
+        } else if (env.BRANCH_NAME.startsWith('release/')) {
+            echo 'On a release branch'
+        } else {
+            echo 'Other branch'
+        }
+    }
+
+------------------------------------------------------------------
+5. PARALLEL STAGES
+------------------------------------------------------------------
+
+stage('Parallel Tests') {
+    parallel {
+        stage('Unit') {
+            steps { sh 'run-unit-tests.sh' }
+        }
+        stage('Integration') {
+            steps { sh 'run-integration-tests.sh' }
+        }
+    }
+}
+
+Scripted style parallel:
+    parallel(
+        unit: {
+            sh 'run-unit-tests.sh'
+        },
+        integration: {
+            sh 'run-integration-tests.sh'
+        }
+    )
+
+------------------------------------------------------------------
+6. FUNCTIONS / SHARED LOGIC
+------------------------------------------------------------------
+
+def buildApp(String env) {
+    sh "mvn clean package -Denv=${env}"
+}
+
+pipeline {
+    agent any
+    stages {
+        stage('Build') {
+            steps {
+                script {
+                    buildApp('staging')
+                }
+            }
+        }
+    }
+}
+
+------------------------------------------------------------------
+7. LOOPS & COLLECTIONS
+------------------------------------------------------------------
+
+script {
+    for (int i = 0; i < 3; i++) {
+        echo "Iteration ${i}"
+    }
+
+    def services = ['auth', 'api', 'web']
+    services.each { svc ->
+        echo "Deploying ${svc}"
+    }
+
+    def map = [name: 'app', version: '1.0']
+    map.each { key, value ->
+        echo "${key} = ${value}"
+    }
+}
+
+------------------------------------------------------------------
+8. READING FILES / JSON / PROPERTIES
+------------------------------------------------------------------
+
+script {
+    def config = readJSON file: 'config.json'
+    echo "Version: ${config.version}"
+
+    def props = readProperties file: 'build.properties'
+    echo "${props['some.key']}"
+
+    def yamlData = readYaml file: 'values.yaml'
+
+    def fileContents = readFile 'somefile.txt'
+    writeFile file: 'output.txt', text: 'Hello World'
+}
+
+------------------------------------------------------------------
+9. CREDENTIALS
+------------------------------------------------------------------
+
+withCredentials([usernamePassword(
+        credentialsId: 'my-cred',
+        usernameVariable: 'USER',
+        passwordVariable: 'PASS')]) {
+    sh 'curl -u $USER:$PASS https://api.example.com'
+}
+
+withCredentials([string(credentialsId: 'api-token', variable: 'TOKEN')]) {
+    sh 'curl -H "Authorization: Bearer $TOKEN" https://api.example.com'
+}
+
+withCredentials([sshUserPrivateKey(
+        credentialsId: 'ssh-key',
+        keyFileVariable: 'SSH_KEY')]) {
+    sh 'ssh -i $SSH_KEY user@host "echo hello"'
+}
+
+------------------------------------------------------------------
+10. INPUT STEP (MANUAL APPROVAL)
+------------------------------------------------------------------
+
+stage('Approval') {
+    steps {
+        input message: 'Deploy to production?', ok: 'Deploy'
+    }
+}
+
+With a timeout and submitter restriction:
+stage('Approval') {
+    steps {
+        timeout(time: 15, unit: 'MINUTES') {
+            input message: 'Approve deploy?', ok: 'Yes', submitter: 'admin,release-manager'
+        }
+    }
+}
+
+------------------------------------------------------------------
+11. SHARED LIBRARIES
+------------------------------------------------------------------
+
+@Library('my-shared-library') _
+myCustomStep()
+
+// Import a specific version/branch
+@Library('my-shared-library@main') _
+
+// Dynamic load
+def lib = library('my-shared-library').com.example.Utils
+lib.doSomething()
+
+------------------------------------------------------------------
+12. AGENT VARIATIONS
+------------------------------------------------------------------
+
+agent any
+agent none
+agent { label 'linux && docker' }
+agent {
+    docker {
+        image 'node:18'
+        args '-v /tmp:/tmp'
+    }
+}
+agent {
+    kubernetes {
+        yaml """
+        apiVersion: v1
+        kind: Pod
+        spec:
+          containers:
+          - name: builder
+            image: maven:3.9-eclipse-temurin-17
+            command: ['cat']
+            tty: true
+        """
+    }
+}
+
+------------------------------------------------------------------
+13. POST CONDITIONS REFERENCE
+------------------------------------------------------------------
+
+post {
+    always   { }  // always runs
+    success  { }  // build succeeded
+    failure  { }  // build failed
+    unstable { }  // build unstable (e.g. test failures)
+    changed  { }  // status changed vs previous run
+    fixed    { }  // build fixed after a previous failure
+    regression { } // build got worse than previous run
+    aborted  { }  // build was aborted
+    cleanup  { }  // runs after all other post conditions
+}
+
+------------------------------------------------------------------
+14. USEFUL PIPELINE STEPS (QUICK LIST)
+------------------------------------------------------------------
+
+sh 'command'                     // run shell command (Linux/macOS)
+bat 'command'                    // run batch command (Windows)
+powershell 'command'             // run PowerShell
+echo 'message'                   // print to console log
+error 'message'                  // fail the build with a message
+sleep time: 5, unit: 'SECONDS'   // pause execution
+archiveArtifacts artifacts: '**/*.jar', fingerprint: true
+stash name: 'build-output', includes: '**/*'
+unstash 'build-output'
+deleteDir()                      // delete current directory
+cleanWs()                        // clean workspace (requires plugin)
+currentBuild.result = 'SUCCESS'  // set build result manually
+currentBuild.displayName = "Build #${env.BUILD_NUMBER} - custom"
+milestone label: 'my-milestone'  // ensure ordering across concurrent builds
+lock('resource-name') { }        // limit concurrent access to a resource
+
+------------------------------------------------------------------
+15. TIPS
+------------------------------------------------------------------
+
+- Use Declarative for most day-to-day pipelines: better structure,
+  validation, and readability.
+- Drop into script { ... } blocks inside Declarative when you need
+  loops, custom functions, or complex conditionals.
+- Use Scripted pipelines when you need maximum flexibility (dynamic
+  stage generation, complex control flow) that Declarative can't
+  easily express.
+- Keep shared/reusable logic in a Jenkins Shared Library rather than
+  duplicating Groovy code across Jenkinsfiles.
+- Use the "Pipeline Syntax" generator in the Jenkins UI (under a
+  pipeline job) to auto-generate correct step syntax for plugins.
+- Validate Jenkinsfile syntax before committing using the Jenkins
+  CLI: java -jar jenkins-cli.jar declarative-linter < Jenkinsfile
+
+==================================================================

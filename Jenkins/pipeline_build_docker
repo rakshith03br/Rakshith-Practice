@@ -1,0 +1,29 @@
+pipeline {
+    agent any
+    environment {
+        IMAGE_NAME = "rakshith/RakshithPractice"
+    }
+    stages{
+        stage('checkout'){
+            steps{
+                git branch: 'main', url: "https://github.com/rakshith..."
+            }
+        }
+        stage('Build docker image'){
+            steps{
+                bat "docker build -t %UMAGE_NAME%:latest ."
+            }
+        }
+        stage('Push to docker'){
+            steps{
+                withCredentials([usernamePassword(credentialsID: 'docker', usernameVariable: 'DOCKET_USER', passwordVariable: 'DOCKET_PASS')]){
+                    bat """
+                    echo %DOCKET_PASS% | docker login -u %DOCKET_USER% --password-stdin
+                    docker push %IMAGE_NAME%:latest
+                    docker logout
+                    """
+                }
+            }
+        }
+    }
+}
